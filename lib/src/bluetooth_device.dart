@@ -21,7 +21,7 @@ class BluetoothDevice {
   Future<void> connect({
     Duration? timeout,
     bool autoConnect = true,
-  }) async {
+  }) {
     final completer = Completer<void>();
     var request = protos.ConnectRequest.create()
       ..remoteId = id.toString()
@@ -36,14 +36,14 @@ class BluetoothDevice {
       });
     }
 
-    await FlutterBlue.instance._channel
-        .invokeMethod('connect', request.writeToBuffer());
-
-    await state.firstWhere((s) => s == BluetoothDeviceState.connected);
-
-    timer?.cancel();
-
-    completer.complete();
+    FlutterBlue.instance._channel
+        .invokeMethod('connect', request.writeToBuffer())
+        .then((_) {
+      state.firstWhere((s) => s == BluetoothDeviceState.connected).then((_) {
+        timer?.cancel();
+        completer.complete();
+      });
+    });
 
     return completer.future;
   }
